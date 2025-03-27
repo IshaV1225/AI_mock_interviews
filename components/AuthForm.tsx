@@ -1,22 +1,28 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-
 "use client"  
-import Image from "next/image"
+
 // Main Form Component utilized by shadcn/ui with customizations
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
+
 import { Button } from "@/components/ui/button"
 import { Form} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+import Image from "next/image"
 import Link from "next/link"
+import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
-import FormField from "./FormField"
+import FormField from "@/components/FormField"
 import { useRouter } from "next/navigation"
 import { auth } from "@/firebase/client"
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth"
-import { signUp } from "@/lib/actions/auth.action"
+
+import { 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword 
+} from "firebase/auth"
+
+import { signUp, signIn } from "@/lib/actions/auth.action"
 
 
 const authFormSchema = (type: FormType) => {
@@ -59,13 +65,13 @@ const AuthForm = ( { type }: { type: FormType} ) => {
                     password,
                 })
 
-                if (!result?.success){
+                if (!result.success){
                     toast.error(result?.message);
                     return;
                 }
 
                 toast.success('Account created successfully, Please sign in.')
-                router.push('/sign-in')
+                router.push("/sign-in")
             
             } else {
                 const { email, password} = values;
@@ -73,9 +79,9 @@ const AuthForm = ( { type }: { type: FormType} ) => {
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
                 const idToken = await userCredential.user.getIdToken();
-
+                
                 if(!idToken) {
-                    toast.error('Signed in failed.')
+                    toast.error('Sign in failed. Please try again')
                     return;
                 }
 
@@ -133,7 +139,7 @@ const AuthForm = ( { type }: { type: FormType} ) => {
                 <p className="text-center">
                     {isSignIn ? 'No account yet?' : 'Have an account already?'}
                     <Link href={!isSignIn ? '/sign-in' : '/sign-up'} className="font-bold text-user-primary ml-1">
-                        {!isSignIn ? "Sign-in" : "Sign-up"}
+                        {!isSignIn ? "Sign In" : "Sign Up"}
                     </Link>
                 </p>
             </div>

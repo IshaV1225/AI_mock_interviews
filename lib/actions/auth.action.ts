@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // This is a server rendered file
-// This action file allows user to sign up and sign in using authentication
+// This action file allows controls all actions regarding authentication
 
 'use server'
 import { auth, db } from "@/firebase/admin"
@@ -10,11 +10,29 @@ import { cookies } from "next/headers"
 // cookie expiry in 1 week 
 const ONE_WEEK = 60 * 60 * 24 * 7 * 1000
 
+// Set up a session cookie for authenticated users
+export async function setSessionCookie(idToken: string) {
+    const cookieStore = await cookies();
+
+    const sessionCookie = await auth.createSessionCookie(idToken, {
+        expiresIn: ONE_WEEK ,     
+    });
+
+    cookieStore.set('session', sessionCookie, {
+        maxAge: ONE_WEEK,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        sameSite: "lax",
+    });
+}
+
+// Authenticate user with sign-up funtionality
 export async function signUp(params: SignUpParams) {
     const { uid, name, email } = params
 
     try{
-        const userRecord = await db.collection('users').doc(uid).get()
+        const userRecord = await db.collection('users').doc(uid).get();
         
         if (userRecord.exists) {
             return {
@@ -27,6 +45,11 @@ export async function signUp(params: SignUpParams) {
         await db.collection('users').doc(uid).set({
             name, email
         })
+
+        return {
+            success: true,
+            message: 'Account created successfully, please sign in.'
+        }
 
     } catch (e: any){
         console.error('Error creating a user', e)
@@ -45,6 +68,7 @@ export async function signUp(params: SignUpParams) {
     }
 }
 
+// Authenticate user with sign-in funtionality
 export async function signIn(params: SignInParams) {
     const {email, idToken} = params;
 
@@ -67,25 +91,50 @@ export async function signIn(params: SignInParams) {
 
         return {
             success: false,
-            message: 'Failed to log into an account.'
-        }
+            message: "Failed to log into an account."
+        };
         
     }
 }
 
-export async function setSessionCookie(idToken: string) {
+// Check if a user exists. Returns the user or null based on the existence of a Session Cookie
+export async function getCurrentUser(): Promise<User | null> {
     const cookieStore = await cookies();
 
+    const sessionCookie = cookieStore.get("session")?.value;
+    if (!sessionCookie) return null;
+    
+    try {  // Check for a Valid user 
+        const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
+       
+        // Get access to the user form the database
+        const userRecord = await db.collection("users").doc(decodedClaims.uid).get();
+        
+        // If there is no user
+        if(!userRecord.exists) {
+            return null;
+        }
+        
+        // Return object with user record data and asign as 'User'
+        return {
+            ...userRecord.data(),
+            id: userRecord.id,
+        } as User;
 
-    const sessionCookie = await auth.createSessionCookie(idToken, {
-        expiresIn: ONE_WEEK ,     
-    })
+    } catch (e) {
+        console.log(e)
+        
+        return null;
+    }
+}
 
-    cookieStore.set('session', sessionCookie, {
-        maxAge: ONE_WEEK,
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        path: '/',
-        sameSite: 'lax',
-    })
+
+// Check if the user has been authenticated
+export async function isAuthenticated() {
+    const user = await getCurrentUser();
+
+    // Use (!!) to turn the user existence (truthy / falsy value) into a boolean value.
+    // original return: return !!user
+    // possibly sending different value
+    return (!!user);   
 }
