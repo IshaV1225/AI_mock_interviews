@@ -10,7 +10,7 @@ const AuthLayout = async ({ children }: {children: ReactNode}) => {
   // Check if user has been authethicated
   const isUserAuthenticated = await isAuthenticated();
 
-  console.log("Auth layout answer: " + isUserAuthenticated)
+  console.log("Auth layout authentication: " + isUserAuthenticated)
   if (isUserAuthenticated) redirect('/');
 
   return (

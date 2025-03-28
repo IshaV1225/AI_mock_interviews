@@ -11,7 +11,7 @@ const RootLayout = async ({ children }: { children: ReactNode}) => {
   console.log("Value of isUserAuthenticated is: " + isUserAuthenticated)
 
   // original condition (!isUserAuthenticated): likely problem in isAuthenticated() function
-  if (isUserAuthenticated) {  
+  if (!isUserAuthenticated) {  
     console.log("New value of isUserAuthenticated is: " + !isUserAuthenticated)
     redirect("/sign-in");
   }

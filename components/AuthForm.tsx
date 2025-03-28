@@ -65,7 +65,7 @@ const AuthForm = ( { type }: { type: FormType} ) => {
                     password,
                 })
 
-                if (!result.success){
+                if (!result?.success){
                     toast.error(result?.message);
                     return;
                 }
@@ -84,6 +84,10 @@ const AuthForm = ( { type }: { type: FormType} ) => {
                     toast.error('Sign in failed. Please try again')
                     return;
                 }
+
+                await signIn({
+                    email, idToken
+                })
 
                 toast.success('Signed in successfully.')
                 router.push('/')  // router hook to go to home page which is the root router hence ('/')

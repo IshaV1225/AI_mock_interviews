@@ -102,13 +102,14 @@ export async function getCurrentUser(): Promise<User | null> {
     const cookieStore = await cookies();
 
     const sessionCookie = cookieStore.get("session")?.value;
+    
     if (!sessionCookie) return null;
     
     try {  // Check for a Valid user 
         const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
        
         // Get access to the user form the database
-        const userRecord = await db.collection("users").doc(decodedClaims.uid).get();
+        const userRecord = await db.collection('users').doc(decodedClaims.uid).get();
         
         // If there is no user
         if(!userRecord.exists) {
@@ -134,7 +135,5 @@ export async function isAuthenticated() {
     const user = await getCurrentUser();
 
     // Use (!!) to turn the user existence (truthy / falsy value) into a boolean value.
-    // original return: return !!user
-    // possibly sending different value
-    return (!!user);   
+    return (!!user);
 }
