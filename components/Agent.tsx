@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+ 
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client';  //rendered on client side
 
@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react'
 import { vapi } from "@/lib/vapi.sdk";
 import { interviewer } from '@/constants';
+import { createFeedback } from '@/lib/actions/general.action';
 
 // define multiple values for call states
 enum CallStatus {
@@ -22,7 +23,7 @@ interface SavedMessage {
     content: string;
 }
 
-const Agents = ({ userName, userId, type, interviewId, questions }: AgentProps) => {
+const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) => {
     const router = useRouter();
     
     // Handle states of the call and messages 
@@ -80,10 +81,12 @@ const Agents = ({ userName, userId, type, interviewId, questions }: AgentProps) 
         console.log('Generate Feedback here.')
 
         // TODO: Create server action that generates feedback
-        const { success, id } = {
-            success: true,
-            id: 'feedback-id'
-        }
+        const { success, feedbackId: id } = await createFeedback({
+            interviewId: interviewId!,
+            userId: userId!,
+            transcript: messages
+        })
+
 
         if(success && id){
             router.push(`/interview/${interviewId}/feedback`)
@@ -92,8 +95,6 @@ const Agents = ({ userName, userId, type, interviewId, questions }: AgentProps) 
             router.push('/')
         }
     }
-    
-
 
     // useEffect executed when changes occur to [messages, callStatus, type, userId]
     useEffect(() => {
@@ -205,4 +206,4 @@ const Agents = ({ userName, userId, type, interviewId, questions }: AgentProps) 
     )
 }
 
-export default Agents
+export default Agent
